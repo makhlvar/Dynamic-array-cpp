@@ -20,7 +20,7 @@
         //глубокая копия гарантирует,что два объекта
         //не будут делить один и тот же участок памяти
         if (size > 0) {
-            ptr = new int [size];
+            ptr = new int [size];//может бросить std::bad_alloc
             for(std::size_t i = 0;i < size; ++i){
                 ptr[i] = other.ptr[i];
             }
@@ -35,7 +35,7 @@
         ptr = nullptr;
         size = 0;
     }
-    void DynamicArray::PrintArray(){//вывод значений
+    void DynamicArray::PrintArray()const{//вывод значений
         //проходим по всем элементам и печатаем их
         //Никаких изменений полей не происходит
         for(std::size_t i = 0;i < size; ++i){
@@ -46,29 +46,25 @@
     int DynamicArray::get(std::size_t index)const{//геттер
         //сначала проверяем, что индекс в допустимых границах
         if(index >= size){
-           std::cout << "incorrect ind" << std::endl;
-        return 0;//Если нет,то сообщаем об ошибке и возвр. 0
-        }//Если да — возвращаем элемент
-        return ptr[index]; //Поля не меняются
+          throw std::out_of_range("get: индекс вне границ массива");
+        }
+        return ptr[index];
     }
 
     void DynamicArray::set(std::size_t index,int value){//сеттер
         //проверяем индекс и значение на корректность 
         if(index >= size){
-            std::cout << "incorrect ind" << std::endl;
-            return;//При нарушении сообщаем и выходим, ничего не меняя
+            throw std::out_of_range("get: индекс вне границ массива");
         }
         if(value < -100 || value > 100){
-            std::cout << "incorrect value" << std::endl;
-            return;
+            throw std::invalid_argument("set: значение вне диапазона [-100; 100]");
         }
         ptr[index] = value; //При успехе записываем значение
     }
 
     void DynamicArray::append(int value){//добавление в конец
         if(value < -100 || value > 100){//проверяем значение
-            std::cout << "incorrect value" << std::endl;
-            return;
+           throw std::invalid_argument("append: значение вне диапазона [-100; 100]");
         }
         //создаём новый массив
         int* tmpPtr = new int[size + 1]; //bad_alloc возможн

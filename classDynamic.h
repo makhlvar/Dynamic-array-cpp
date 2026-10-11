@@ -1,5 +1,7 @@
 #pragma once
 #include <cstddef>//size_t
+#include <stdexcept>//std::out_of_range, std::invalid_argument
+#include <new>//std::bad_alloc
 
 class DynamicArray{//класс динамического массива
     private:
@@ -21,7 +23,7 @@ class DynamicArray{//класс динамического массива
     //Освобождает память,выделенную под массив,если она была
     //После завершения работы деструктора объект невалиден
 
-    void PrintArray();//ф-ция вывода всех значений массива
+    void PrintArray()const;//ф-ция вывода всех значений массива
     //Выводит все size элементов в одну строку через пробел
     //затем переводит курсор на новую строку
     //Не изменяет состояние объекта
