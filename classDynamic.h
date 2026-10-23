@@ -64,10 +64,19 @@ public:
         //возвращаем тот же поток для цепочек: std::cout << a << b
         for (std::size_t i = 0; i < arr.size; ++i) {
             os << arr.ptr[i];
-            if (i + 1 < arr.size) os << ' ';//пробел между элементами
+            if (i + 1 < arr.size) os << ' '; //пробел между элементами
         }
         return os;
     }
+
+    //Задание 1 копир присваивание
+    DynamicArray& operator=(const DynamicArray& other);
+
+    //задание 2 мув конструктор
+    DynamicArray(DynamicArray&& other) noexcept;
+
+    //задание 3 мув присваивание
+    DynamicArray& operator=(DynamicArray&& other) noexcept;// ноуэксепт эт хрень чтоб сработало
 };
 
 //Конструктор по умолчанию
@@ -113,7 +122,7 @@ DynamicArray<T>::~DynamicArray() {
 template <typename T>
 void DynamicArray<T>::PrintArray() const {
     for (std::size_t i = 0; i < size; ++i) {
-        std::cout << ptr[i] << " ";
+        std::cout << ptr[i] <<  ' ';
     }
     std::cout << std::endl;
 }
@@ -137,7 +146,7 @@ void DynamicArray<T>::set(std::size_t index, const T& value) {
         throw std::out_of_range("set: индекс вне границ массива");
     }
     //Задание 1: проверка диапазона для целочисленных типов
-    if constexpr (std::is_integral_v<T>) { //особый иф кот. Вычисляет условие
+    if constexpr (std::is_integral_v<T>) { //особый иф который Вычисляет условие
     //во время компиляции
     //Эта ветка компилируется только если T целочисленный тип
     //Для std::string ветка является ложной и отбрасывается компилятором
@@ -180,7 +189,7 @@ void DynamicArray<T>::push_back(const T& value) {
     ++size;
 }
 
-//add: *this = *this + other
+//add *this = *this + other
 template <typename T>
 void DynamicArray<T>::add(const DynamicArray& other) {
     for (std::size_t i = 0; i < size; ++i) {
@@ -192,7 +201,7 @@ void DynamicArray<T>::add(const DynamicArray& other) {
     }
 }
 
-//substract: *this = *this - other
+//substract: *this = *this – other
 template <typename T>
 void DynamicArray<T>::substract(const DynamicArray& other) {
     for (std::size_t i = 0; i < size; ++i) {
@@ -234,7 +243,7 @@ bool DynamicArray<T>::operator==(const DynamicArray& other) const {
 
 template <typename T>
 bool DynamicArray<T>::operator!=(const DynamicArray& other) const {
-    return !(*this == other); //просто отрицание ==
+    return !(*this == other);
 }
 
 //Задание 3: += и -= для массива
@@ -282,6 +291,67 @@ const T* DynamicArray<T>::begin() const { return ptr; }
 template <typename T>
 const T* DynamicArray<T>::end() const { return ptr + size; }
 
+//5 часть эээээ
+//Задание 1: operator= (копирующее)
+template <typename T>
+DynamicArray<T>& DynamicArray<T>::operator=(const DynamicArray& other) {
+    //защита от самоприсваивания: a = a
+    if (this == &other) return *this;
+
+    //освобождаем свои ресурсы
+    delete[] ptr;
+    ptr = nullptr;
+
+    //копируем размеры
+    size = other.size;
+    capacity = other.capacity;
+
+    //выделяем и копируем данные
+    if (capacity > 0) {
+        ptr = new T[capacity];
+        for (std::size_t i = 0; i < size; ++i) ptr[i] = other.ptr[i];
+    }
+    return *this; //возвращаем *this для цепочек a = b = c
+}
+
+//Задание 2: move-конструктор
+template <typename T>
+DynamicArray<T>::DynamicArray(DynamicArray&& other) noexcept
+//&& rvalue-ссылка,активируется при std::move
+//noexcept чет типа обещания компилятору что эта ф-ция никогда не бросит исключения
+//тут нема операций которые могут бросить искл тк память не выделяется,чужие
+//конструкторы не испоользуются
+    : ptr(other.ptr), size(other.size), capacity(other.capacity) {
+    //перехватываем ресурсы
+    other.ptr = nullptr;
+    other.size = 0;
+    other.capacity = 0;
+    //обнуляем источник,чтобы его деструктор не освободил нашу память
+}
+
+//Задание 3: move-присваивание
+template <typename T>
+DynamicArray<T>& DynamicArray<T>::operator=(DynamicArray&& other) noexcept {
+    //самоприсваивание
+    if (this == &other) return *this;
+
+    //освобождаем свои данные
+    delete[] ptr;
+
+    //перехватываем ресурсы
+    ptr = other.ptr;
+    size = other.size;
+    capacity = other.capacity;
+
+    //обнуляем источник
+    other.ptr = nullptr;
+    other.size = 0;
+    other.capacity = 0;
+
+    return *this;
+}
+
+//кусок старой части
 //Задание 3: distance евклидово расстояние
 template <typename T>
 //Отдельная свободная функция вне класса, поэтому template <typename T> заново
@@ -296,7 +366,7 @@ double distance(const DynamicArray<T>& a, const DynamicArray<T>& b) {
         //Если T не число (например string) выбрасываем bad_typeid
         throw std::bad_typeid();
     } else {
-        //T явл числом считаем sqrt(Σ(a[i] - b[i])²)
+        //T явл числом считаем sqrt(Σ(a[i] – b[i])²)
         double sum = 0.0;
         for (std::size_t i = 0; i < a.getSize(); ++i) {
             double diff = static_cast<double>(a.get(i)) - static_cast<double>(b.get(i));

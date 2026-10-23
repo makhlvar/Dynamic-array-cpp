@@ -2,6 +2,11 @@
 #include<iostream>
 #include<string>
 #include<stdexcept>
+#include<utility>//std::move
+
+void foo(DynamicArray<int> array){
+    array.PrintArray();
+}
 
 int main(){
     std::cout <<"\n===Часть 4.1 оператор []===\n";
@@ -38,7 +43,7 @@ int main(){
 //ranged based for синтаксический сахар над begin
 //const-обход: только чтнение
 // const auto& ссылка на константу. Менять нельзя.
-// Использует begin() const / end() const возвр const T*.
+// Использует begin() const / end() const возвр const T*
     std::cout << "const-обход two (только чтение): ";
     for (const auto& el : two) {
         std::cout << el << ' ';
@@ -66,7 +71,7 @@ int main(){
     std::cout << '\n';
 
 //для сравнения: обход по значению (копия)
-// auto el (без &) копия. Изменение не влияет на массив.
+// auto el (без &) копия. Изменение не влияет на массив
     std::cout << "обход one по значению (auto el): ";
     for (auto el : one) {
         ++el;
@@ -94,6 +99,66 @@ int main(){
     DynamicArray<int> p(3); p.set(0, 1); p.set(1, 2); p.set(2, 3);
     DynamicArray<int> q(3); q.set(0, 4); q.set(1, 5); q.set(2, 6);
     std::cout << "distance(p, q) = " << distance(p, q) << '\n';
+
+      std::cout << "\n=== Часть 5.1. operator= (копирующее присваивание) ===\n";
+    DynamicArray<int> a(3);
+    a.set(0, 1); a.set(1, 2); a.set(2, 3);
+    std::cout << "a = " << a << '\n';
+
+    DynamicArray<int> b;
+    b = a;   //operator=(const DynamicArray&)
+    std::cout << "b = " << b << '\n';
+    b[0] = 99;
+    std::cout << "после b[0] = 99: a = " << a << ", b = " << b << '\n';
+    //a не изменился(глубокая копия)
+
+    std::cout << "\n=== Часть 5.2. Move-конструктор (std::move) ===\n";
+    DynamicArray<int> c(3);
+    c.set(0, 10); c.set(1, 20); c.set(2, 30);
+    std::cout << "c = " << c << '\n';
+
+    DynamicArray<int> g = std::move(c);   //move-конструктор
+    std::cout << "g (из c через move) = " << g << '\n';
+    std::cout << "c после move: size = " << c.getSize()
+              << ", capacity = " << c.getCapacity()
+              << " c стал пустым\n";
+
+    std::cout << "\n=== Часть 5.3. Move-присваивание ===\n";
+    DynamicArray<int> e;
+    e = std::move(g); 
+    std::cout << "e (из g через move) = " << e << '\n';
+    std::cout << "g после move: size = " << g.getSize()
+              << ", capacity = " << g.getCapacity() << '\n';
+
+    std::cout << "\n=== Часть 5.4. Демонстрация: копия vs move в функции ===\n";
+    DynamicArray<int> big(5);
+    big.set(0, 1); big.set(1, 2); big.set(2, 3); big.set(3, 4); big.set(4, 5);
+    std::cout << "big = " << big << '\n';
+
+    std::cout << "--- передача по значению (копия эт дорого) ---\n";
+    foo(big);   //срабатывает конструктор копирования
+
+    std::cout << "--- передача через move ---\n";
+    foo(std::move(big));   //срабатывает move-конструктор
+    std::cout << "big после move: size = " << big.getSize()
+              << ", capacity = " << big.getCapacity() << '\n';
+
+    std::cout << "\n=== Часть 5.5. Rule of five: краткая проверка ===\n";
+    DynamicArray<std::string> st(2);
+    st.set(0, "cat");
+    st.set(1, "dog");
+    std::cout << "st = " << st << std::endl;
+
+    DynamicArray<std::string> s2 = st; 
+    s2[0] = "lion";
+    std::cout << "st = " << st << ", s2 = " << s2 << '\n';
+
+    DynamicArray<std::string> s3 = std::move(s2);   //move для строк
+    std::cout << "s3 (из s2) = " << s3 << '\n';
+    std::cout << "s2 после move: size = " << s2.getSize() << '\n';
+
+    std::cout << "\nГотово. Если собрано с -fsanitize=address, "
+              << "утечек и двойных освобождений не должно быть\n";
 
     return 0;
 }
