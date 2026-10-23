@@ -1,66 +1,54 @@
 #include "classDynamic.h"
 #include <iostream>
+#include <string>
+#include <stdexcept>
+#include <typeinfo>
 
 int main() {
-    DynamicArray arr(5);//создаём массив из 5 нулей
+    std::cout << "\n=== Часть 3.1. int: конструктор, set, operator<< ===\n";
 
-    arr.PrintArray();          
+    DynamicArray<int> a(3);//массив из 3 нулей
+    a.set(0, 1); a.set(1, 2); a.set(2, 3);//a = {1, 2, 3}
+    std::cout << "a = " << a << '\n';//через operator<< 1 2 3
 
-    arr.set(1, 4);//ставим по индексу 1 значение 4
-    arr.set(2, 5);//ставим по индексу 2 значение 5
-    arr.PrintArray();//печатаем: 0 4 5 0 0
-
-    std::cout << arr.get(2) << std::endl;//читаем элемент по индексу 2 то есть "5"
-
-     try{
-        arr.set(6,2);// out_of_range
-    }
-    catch(const std::out_of_range& e){
-        std::cerr << "set(6,2) out_of_range: " << e.what() << '\n';
+    std::cout << "\n=== Часть 3.2. if constexpr: проверка диапазона только для int ===\n";
+    try {
+        a.set(0, 200);//200 вне [-100; 100]выкид throw std::invalid_argument
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "set(0,200) invalid_argument: " << e.what() << '\n';
     }
 
-    try{
-        arr.set(0,101);//101 вне [-100;100] invalid_argument
-    }
-    catch(const std::invalid_argument& e){
-        std::cerr << "set(0,101) invalid_argument: " << e.what() << '\n';
-    }
-    
-    arr.PrintArray();//0 4 5 0 0
+    std::cout << "\n=== Часть 3.3. distance для int ===\n";
+    DynamicArray<int> b(3);
+    b.set(0, 4); b.set(1, 5); b.set(2, 6);//b = {4, 5, 6}
+    std::cout << "b = " << b << '\n';
+    std::cout << "distance(a, b) = " << distance(a, b) << '\n';
 
-    try{
-         arr.get(7);//индекс 7 вне границ out_of_range
-    }
-    catch(const std::out_of_range& e){
-        std::cerr << "get(7) out_of_range: " << e.what() << '\n';
-    }
-    
-    DynamicArray A(arr);
-    A.PrintArray();
+    std::cout << "\n=== Часть 3.4. std::string: проверка диапазона не работает ===\n";
+    DynamicArray<std::string> s(2);
+    s.set(0, "hello");
+    s.set(1, "world");
+    //Для T = std::string ветка if constexpr не компилируется,
+    //поэтому любые строки допустимы
+    std::cout << "s = " << s << '\n';
 
-    try{
-        A.append(500);//500 вне [-100;100] выброшено invalid_argument
-    }
-    catch(const std::invalid_argument& e){
-        std::cerr << "append(500) invalid_argument: " << e.what() << '\n';
+    std::cout << "\n=== Часть 3.5. distance для std::string bad_typeid ===\n";
+    try {
+        DynamicArray<std::string> s2(2);
+        s2.set(0, "a"); s2.set(1, "b");
+        distance(s, s2);//T = std::string throw std::bad_typeid
+    } catch (const std::bad_typeid& e) {
+        std::cerr << "distance(string) bad_typeid: " << e.what() << '\n';
     }
 
-    A.append(3);//добавляем в конец A значение 3,размер A становится 6
-    A.PrintArray();//печатаем A: 0 4 5 0 0 3
-
-    A.add(arr);
-    A.PrintArray();//печатаем A после add
-
-    A.substract(arr);
-    A.PrintArray();//A после substract
-
-    try{
-        DynamicArray huge(1000000000000ULL);//очеееень много
-        std::cout << "huge создан (неожиданно)\n";
-    }
-    catch(const std::bad_alloc& e){
-        std::cerr << "bad_alloc: " << e.what() << std::endl;
+    std::cout << "\n=== Часть 3.6. distance при разных размерах invalid_argument ===\n";
+    try {
+        DynamicArray<int> c(5);
+        distance(a, c);//a.size = 3, c.size = 5 throw std::invalid_argument
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "distance(a,c) invalid_argument: " << e.what() << '\n';
     }
 
     return 0;
 }
+
